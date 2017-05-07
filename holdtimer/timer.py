@@ -40,10 +40,12 @@ class TimerLabel(pyglet.text.Label):
 
 class TimerApp(pyglet.window.Window):
 
+    start_x_offset = 10
+    start_y_offset = 80
 
     def __init__(self, *args, **kwargs):
         super(TimerApp, self).__init__(*args, **kwargs)
-        self.directions_label = pyglet.text.Label('Key Counter + Timer, by N. A. Del Grosso\nPress and Hold Any Key To Start Timing!',
+        self.directions_label = pyglet.text.Label('Key Counter + Timer, by N. A. Del Grosso\nPress and Hold Any Key To Start Timing!\n(Escape to exit, backspace to reset)',
                                                   x= 50,
                                                   y=self.height - 20,
                                                   multiline=True,
@@ -52,8 +54,8 @@ class TimerApp(pyglet.window.Window):
         self.global_timer.time = 0.
         pyglet.clock.schedule(self.update_global_timer)
         self.timers = OrderedDict()
-        self.curr_y = self.height - 60
-        self.curr_x = 10
+        self.curr_y = self.height - self.start_y_offset
+        self.curr_x = self.start_x_offset
         self.text_size = 16
 
     def update_global_timer(self, dt):
@@ -73,11 +75,21 @@ class TimerApp(pyglet.window.Window):
         if sym == key.ESCAPE:
             self.close()
 
+        if sym == key.BACKSPACE:
+            for timer in self.timers.values():
+                 pyglet.clock.unschedule(timer.update)
+            self.timers = {}
+            self.curr_x = self.start_x_offset
+            self.curr_y = self.height - self.start_y_offset
+
+            self.global_timer.time = 0.
+            return
+
         try:
             self.timers[sym].active = True
         except KeyError:
             if self.curr_y < self.text_size * 1.5:
-                self.curr_y = self.height - 60
+                self.curr_y = self.height - 80
                 self.curr_x += self.width // 2
             self.curr_y -= int(self.text_size * 1.5)
 
@@ -85,7 +97,8 @@ class TimerApp(pyglet.window.Window):
                                           x=self.curr_x, y=self.curr_y, font_size=self.text_size)
 
     def on_key_release(self, sym, mod):
-        self.timers[sym].active = False
+        if self.timers:
+            self.timers[sym].active = False
 
 
 
