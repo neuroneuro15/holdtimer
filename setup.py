@@ -1,4 +1,10 @@
+import sys
 from setuptools import setup
+if 'win' in sys.platform.lower():
+    try:
+        import py2exe
+    except ImportError:
+        pass
 
 setup(
     name='holdtimer',
@@ -12,7 +18,9 @@ setup(
     install_requires=['Click', 'pyglet'],
     entry_points="""
         [console_scripts]
-        holdtimer=timer:run
-    """
+        holdtimer=holdtimer.timer:run
+    """,
+    windows=[{'script':"timer.py"}],
+    options={'py2exe':{'includes': ['sip']}}
 )
 
