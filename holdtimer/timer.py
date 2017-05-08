@@ -1,5 +1,7 @@
 import pyglet
 from pyglet.window import key
+import pyglet.gl as gl
+import random
 from collections import OrderedDict
 import click
 
@@ -7,6 +9,7 @@ import click
 class TimerLabel(pyglet.text.Label):
 
     fmt = "{self.name}: ({self.npressed}) {self.time:.2f}"
+    srcColors = [.2, .2, 0., 0., .4]
 
     def __init__(self, name='', start_time=0, active=False, *args, **kwargs):
         super(TimerLabel, self).__init__(*args, **kwargs)
@@ -15,6 +18,8 @@ class TimerLabel(pyglet.text.Label):
         self.time = start_time
         self.active = active
         self.text = self.fmt.format(self=self)
+        random.shuffle(self.srcColors)
+        self.bgColor = tuple(self.srcColors[:3]) + (0.,)
         pyglet.clock.schedule(self.update)
 
     @property
@@ -42,6 +47,7 @@ class TimerApp(pyglet.window.Window):
 
     start_x_offset = 10
     start_y_offset = 80
+    off_color = (0., 0., 0., 0.)
 
     def __init__(self, *args, **kwargs):
         super(TimerApp, self).__init__(*args, **kwargs)
@@ -57,6 +63,7 @@ class TimerApp(pyglet.window.Window):
         self.curr_y = self.height - self.start_y_offset
         self.curr_x = self.start_x_offset
         self.text_size = 16
+        self.bgColor = self.off_color
 
     def update_global_timer(self, dt):
         self.global_timer.time += dt
@@ -64,6 +71,7 @@ class TimerApp(pyglet.window.Window):
 
     def on_draw(self):
         self.clear()
+        gl.glClearColor(*self.bgColor)
         self.directions_label.draw()
         self.global_timer.draw()
         for timer in self.timers.values():
@@ -85,6 +93,8 @@ class TimerApp(pyglet.window.Window):
             self.global_timer.time = 0.
             return
 
+
+
         try:
             self.timers[sym].active = True
         except KeyError:
@@ -93,10 +103,17 @@ class TimerApp(pyglet.window.Window):
                 self.curr_x += self.width // 2
             self.curr_y -= int(self.text_size * 1.5)
 
+
+
             self.timers[sym] = TimerLabel(name=key.symbol_string(sym), active=True,
                                           x=self.curr_x, y=self.curr_y, font_size=self.text_size)
 
+        self.bgColor = self.timers[sym].bgColor
+
     def on_key_release(self, sym, mod):
+
+        self.bgColor = self.off_color
+
         if self.timers:
             self.timers[sym].active = False
 
